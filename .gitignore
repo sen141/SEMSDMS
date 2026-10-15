@@ -1,0 +1,27 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.venv/
+venv/
+.env
+.env.*
+!.env.example
+*.log
+logs/
+staticfiles/
+media/
+db.sqlite3
+# Local crypto material
+*.key
+*.pem
+*.pfx
+*.p12
+*.jks
+*.crt
+*.cer
+secrets/
+openapi-check.yaml
+openapi-check.yml
+schema-check.json
+schema-check.yml
