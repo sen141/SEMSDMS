@@ -81,5 +81,6 @@ SPECTACULAR_SETTINGS = {
         "Staging and finalization are separate operations; only finalization returns permanent MRNs."
     ),
     "VERSION": "1.1.0",
+    "COMPONENT_SPLIT_REQUEST": True,
     "SERVE_INCLUDE_SCHEMA": False,
 }
