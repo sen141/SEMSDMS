@@ -25,3 +25,21 @@ openapi-check.yaml
 openapi-check.yml
 schema-check.json
 schema-check.yml
+
+# Local development inspection and verification artifacts
+/inspect_application_numbers.py
+/inspect_file_upload.py
+/verify_crypto_utils.py
+/verify_file_server_client.py
+/verify_file_upload_model.py
+/verify_file_upload_repository.py
+/verify_temporary_upload_business.py
+/verify_temporary_upload_payload_builder.py
+/verify_temporary_upload_request.py
+
+# Local upload test artifacts
+/semsdms_batch_test1.txt
+/semsdms_batch_test2.txt
+/semsdms_upload_test.txt
+/test-document.pdf
+/test-document.txt
