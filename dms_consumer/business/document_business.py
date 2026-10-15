@@ -52,6 +52,19 @@ class DocumentBusiness:
     def _stage_file(self, *, arn, document_id, file_obj, beneficiary_mobile, doc_type_name=None):
         if not file_obj or not getattr(file_obj, "size", 0):
             return {"msg": "File is empty", "submittedToFileServer": False, "metadataSaved": False}, 400
+        submission_enabled = (
+            os.getenv("DMS_TEMP_UPLOAD_SUBMIT_ENABLED", "False")
+            .strip()
+            .lower()
+            in {"1", "true", "yes", "on"}
+        )
+
+        if not submission_enabled:
+            return {
+                "msg": "Temporary upload submission is disabled by configuration.",
+                "submittedToFileServer": False,
+                "metadataSaved": False,
+            }, 503
         try:
             file_bytes = file_obj.read()
             encrypted, signature = self._prepare_upload_payload(
@@ -142,7 +155,9 @@ class DocumentBusiness:
             )
             outcomes.append(body)
             if status_code != 200 or not body.get("submittedToFileServer"):
-                return {"msg": "error", "results": outcomes}, (502 if status_code == 502 else 200)
+                return {"msg": "error", "results": outcomes}, (
+                    status_code if status_code in {502, 503} else 200
+                )
         if any(item.get("metadataSaved") is False and item.get("submittedToFileServer") for item in outcomes):
             msg = "success_with_metadata_not_saved"
         else:

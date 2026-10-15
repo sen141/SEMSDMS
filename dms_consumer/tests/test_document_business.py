@@ -1,4 +1,4 @@
-import json
+﻿import json
 import os
 from unittest.mock import Mock, patch
 
@@ -12,11 +12,39 @@ from dms_consumer.services.fileserver_client import FileServerError
 
 class DocumentBusinessTests(SimpleTestCase):
     def setUp(self):
+        self._submission_flag = patch.dict(
+            os.environ, {"DMS_TEMP_UPLOAD_SUBMIT_ENABLED": "True"}
+        )
+        self._submission_flag.start()
+        self.addCleanup(self._submission_flag.stop)
+
         self.business = DocumentBusiness()
         self.upload = lambda name="sample.pdf", data=b"sample content": SimpleUploadedFile(
             name, data, content_type="application/pdf"
         )
 
+    def test_disabled_submission_does_not_call_file_server_or_save_metadata(self):
+        self.business._prepare_upload_payload = Mock()
+        self.business._submit_prepared = Mock()
+
+        with patch.dict(
+            os.environ, {"DMS_TEMP_UPLOAD_SUBMIT_ENABLED": "False"}
+        ), patch.object(
+            FileUploadRepository, "create_metadata"
+        ) as create_metadata:
+            body, status_code = self.business.upload_single(
+                document_id="PAN",
+                file_obj=self.upload(),
+                applnno="APP-1001",
+                user_id="9000000000",
+            )
+
+        self.assertEqual(status_code, 503)
+        self.assertFalse(body["submittedToFileServer"])
+        self.assertFalse(body["metadataSaved"])
+        self.business._prepare_upload_payload.assert_not_called()
+        self.business._submit_prepared.assert_not_called()
+        create_metadata.assert_not_called()
     def test_successful_stage_without_configured_idn_does_not_fail_or_invent_idn(self):
         self.business._prepare_upload_payload = Mock(return_value=("encrypted", "signature"))
         self.business._submit_prepared = Mock(return_value={"msg": "success"})

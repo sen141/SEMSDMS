@@ -34,6 +34,9 @@ class DocumentUploadController(APIView):
             ),
             400: OpenApiResponse(description="Request validation failed or file is empty."),
             502: OpenApiResponse(description="FileServerApp submission failed."),
+            503: OpenApiResponse(
+                description="Temporary upload submission is disabled by configuration."
+),
         },
     )
     def post(self, request):
