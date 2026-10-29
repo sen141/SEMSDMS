@@ -43,3 +43,6 @@ schema-check.yml
 /semsdms_upload_test.txt
 /test-document.pdf
 /test-document.txt
+
+# Generated OpenAPI validation artifact
+openapi-validation.yaml
