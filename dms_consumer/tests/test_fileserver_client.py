@@ -43,3 +43,51 @@ class FileServerClientTests(SimpleTestCase):
         self.assertIn("dms_registration_no", data)
         self.assertIn("user_transaction_signature", data)
         self.assertNotIn("dmsRegistrationNo", data)
+
+    @patch("dms_consumer.services.fileserver_client.requests.post")
+    def test_permanent_download_uses_json_mrn_list(self, post):
+        response = Mock()
+        response.json.return_value = [
+            {"fileName": "document.pdf", "data": "cGRm"}
+        ]
+        response.raise_for_status.return_value = None
+        post.return_value = response
+
+        result = self.client.download_by_mrn(["MRN001", "MRN002"])
+
+        self.assertEqual(result, [{"fileName": "document.pdf", "data": "cGRm"}])
+        args, kwargs = post.call_args
+        self.assertTrue(args[0].endswith("/downloadFile"))
+        self.assertEqual(
+            kwargs["json"],
+            {
+                "mrn": ["MRN001", "MRN002"],
+                "dmsRegistrationNo": self.client.registration_no,
+            },
+        )
+        self.assertEqual(kwargs["timeout"], self.client.timeout)
+
+    @patch("dms_consumer.services.fileserver_client.requests.post")
+    def test_temporary_download_uses_form_fields(self, post):
+        response = Mock()
+        response.json.return_value = [
+            {"fileName": "temporary.pdf", "data": "cGRm"}
+        ]
+        response.raise_for_status.return_value = None
+        post.return_value = response
+
+        result = self.client.download_temporary("TEST-ARN")
+
+        self.assertEqual(
+            result, [{"fileName": "temporary.pdf", "data": "cGRm"}]
+        )
+        args, kwargs = post.call_args
+        self.assertTrue(args[0].endswith("/downloadFileFromTemp"))
+        self.assertEqual(
+            kwargs["data"],
+            {
+                "arn": "TEST-ARN",
+                "dmsRegistrationNo": self.client.registration_no,
+            },
+        )
+        self.assertEqual(kwargs["timeout"], self.client.timeout)
