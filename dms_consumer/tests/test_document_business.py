@@ -1,4 +1,4 @@
-﻿import json
+import json
 import os
 from unittest.mock import Mock, patch
 
@@ -222,3 +222,52 @@ class DocumentBusinessTests(SimpleTestCase):
             body, status_code = self.business.download_permanent("APP-1001")
         self.assertEqual(status_code, 200)
         self.assertEqual(body, {"pan.pdf": "cGRm", "msg": "success"})
+
+
+    def test_list_temporary_documents_returns_metadata(self):
+        expected = [{"arn": "APP-1001", "documentId": "DOC001", "sha256Doc": "abc123"}]
+        self.business.client.list_temporary_documents = Mock(return_value=expected)
+
+        body, status_code = self.business.list_temporary_documents("APP-1001")
+
+        self.assertEqual(status_code, 200)
+        self.assertEqual(body, {"msg": "success", "documents": expected})
+        self.business.client.list_temporary_documents.assert_called_once_with("APP-1001")
+
+    def test_list_permanent_documents_returns_metadata(self):
+        expected = [{
+            "mrn": "MRN001",
+            "arn": "APP-1001",
+            "filename": "document.pdf",
+            "timestamp": "2026-10-30T10:00:00+00:00",
+            "documentTypeName": "Test Document",
+            "size": 2200,
+            "contenttype": "application/pdf",
+        }]
+        self.business.client.list_permanent_documents = Mock(return_value=expected)
+
+        body, status_code = self.business.list_permanent_documents("APP-1001")
+
+        self.assertEqual(status_code, 200)
+        self.assertEqual(body, {"msg": "success", "documents": expected})
+        self.business.client.list_permanent_documents.assert_called_once_with("APP-1001")
+
+    def test_list_temporary_documents_returns_502_on_client_error(self):
+        self.business.client.list_temporary_documents = Mock(
+            side_effect=FileServerError("temporary metadata request failed")
+        )
+
+        body, status_code = self.business.list_temporary_documents("APP-1001")
+
+        self.assertEqual(status_code, 502)
+        self.assertIn("temporary metadata request failed", body["msg"])
+
+    def test_list_permanent_documents_returns_502_on_client_error(self):
+        self.business.client.list_permanent_documents = Mock(
+            side_effect=FileServerError("permanent metadata request failed")
+        )
+
+        body, status_code = self.business.list_permanent_documents("APP-1001")
+
+        self.assertEqual(status_code, 502)
+        self.assertIn("permanent metadata request failed", body["msg"])

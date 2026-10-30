@@ -46,3 +46,9 @@ schema-check.yml
 
 # Generated OpenAPI validation artifact
 openapi-validation.yaml
+
+# Generated permanent-download verification artifacts
+/permanent-document-1.pdf
+/permanent-document-1-decoded.pdf
+/permanent-document-2-decoded.pdf
+/permanent-TEST-SINGLE-VALIDATION-decoded.pdf

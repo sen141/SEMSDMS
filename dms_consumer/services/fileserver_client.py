@@ -46,6 +46,34 @@ class FileServerClient:
             raise FileServerError(f"FileServerApp returned an unexpected response from {endpoint}.")
         return body
 
+    def _get_json_list(self, endpoint, params):
+        try:
+            response = requests.get(
+                self._url(endpoint),
+                params=params,
+                timeout=self.timeout,
+            )
+            response.raise_for_status()
+            body = response.json()
+        except requests.RequestException as exc:
+            raise FileServerError(
+                f"FileServerApp request to {endpoint} failed: {exc}"
+            ) from exc
+        except ValueError as exc:
+            raise FileServerError(
+                f"FileServerApp returned a non-JSON response from {endpoint}."
+            ) from exc
+
+        if not isinstance(body, list):
+            raise FileServerError(
+                f"FileServerApp returned an unexpected response from {endpoint}."
+            )
+        if not all(isinstance(item, dict) for item in body):
+            raise FileServerError(
+                f"FileServerApp returned unexpected list items from {endpoint}."
+            )
+        return body
+
     @staticmethod
     def _require_success(body, operation):
         if str(body.get("msg", "")).lower() != "success":
@@ -97,3 +125,16 @@ class FileServerClient:
         if not isinstance(body, list):
             raise FileServerError("FileServerApp returned an unexpected temporary-download response.")
         return body
+
+
+    def list_temporary_documents(self, arn):
+        return self._get_json_list("listTemporaryDocuments", {
+            "dmsRegistrationNo": self.registration_no,
+            "arn": arn,
+        })
+
+    def list_permanent_documents(self, arn):
+        return self._get_json_list("listPermanentDocuments", {
+            "dmsRegistrationNo": self.registration_no,
+            "arn": arn,
+        })

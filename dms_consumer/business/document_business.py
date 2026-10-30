@@ -296,6 +296,20 @@ class DocumentBusiness:
         except Exception as exc:
             return {"msg": str(exc)}, 502
 
+    def list_temporary_documents(self, arn):
+        try:
+            documents = self.client.list_temporary_documents(arn)
+            return {"msg": "success", "documents": documents}, 200
+        except Exception as exc:
+            return {"msg": str(exc)}, 502
+
+    def list_permanent_documents(self, arn):
+        try:
+            documents = self.client.list_permanent_documents(arn)
+            return {"msg": "success", "documents": documents}, 200
+        except Exception as exc:
+            return {"msg": str(exc)}, 502
+
     def file_list(self, applnno, service_code):
         try:
             return {"msg": "success", "fileList": FileUploadRepository.service_file_list(applnno, service_code)}, 200

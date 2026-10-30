@@ -1,5 +1,5 @@
 
-from drf_spectacular.utils import extend_schema, OpenApiResponse, OpenApiTypes
+from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiResponse, OpenApiTypes
 from rest_framework.parsers import FormParser, MultiPartParser, JSONParser
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -173,6 +173,72 @@ class TemporaryDownloadController(APIView):
         serializer = ArnSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         return execute_business(DocumentBusiness().download_temporary(serializer.validated_data["arn"]))
+
+
+class TemporaryDocumentListController(APIView):
+    serializer_class = ArnSerializer
+
+    @extend_schema(
+        summary="List temporary document metadata by application number",
+        parameters=[
+            OpenApiParameter(
+                name="arn",
+                type=OpenApiTypes.STR,
+                location=OpenApiParameter.QUERY,
+                required=True,
+                description="Application reference number.",
+            ),
+        ],
+        responses={
+            200: OpenApiResponse(
+                response=OpenApiTypes.OBJECT,
+                description="Temporary document metadata returned by FileServerApp.",
+            ),
+            400: OpenApiResponse(description="Missing or invalid arn query parameter."),
+            502: OpenApiResponse(description="FileServerApp metadata request failed."),
+        },
+    )
+    def get(self, request):
+        serializer = ArnSerializer(data=request.query_params)
+        serializer.is_valid(raise_exception=True)
+        return execute_business(
+            DocumentBusiness().list_temporary_documents(
+                serializer.validated_data["arn"]
+            )
+        )
+
+
+class PermanentDocumentListController(APIView):
+    serializer_class = ArnSerializer
+
+    @extend_schema(
+        summary="List permanent document metadata by application number",
+        parameters=[
+            OpenApiParameter(
+                name="arn",
+                type=OpenApiTypes.STR,
+                location=OpenApiParameter.QUERY,
+                required=True,
+                description="Application reference number.",
+            ),
+        ],
+        responses={
+            200: OpenApiResponse(
+                response=OpenApiTypes.OBJECT,
+                description="Permanent document metadata returned by FileServerApp.",
+            ),
+            400: OpenApiResponse(description="Missing or invalid arn query parameter."),
+            502: OpenApiResponse(description="FileServerApp metadata request failed."),
+        },
+    )
+    def get(self, request):
+        serializer = ArnSerializer(data=request.query_params)
+        serializer.is_valid(raise_exception=True)
+        return execute_business(
+            DocumentBusiness().list_permanent_documents(
+                serializer.validated_data["arn"]
+            )
+        )
 
 
 class FileListController(APIView):
